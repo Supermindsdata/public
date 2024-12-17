@@ -1,1 +1,22 @@
+from pyspark.sql.functions import col, count
+
+# Step 1: Filter rows where Provider_Flag is ISP
+isp_spell_hrg_df = apcs_core.filter(col("Provider_Flag") == "ISP")
+
+# Step 2: Group by Spell_Core_HRG_SUS, Der_Financial_Year, and Der_Activity_Month and count occurrences
+isp_spell_hrg_period_df = (
+    isp_spell_hrg_df.groupBy("Spell_Core_HRG_SUS", "Der_Financial_Year", "Der_Activity_Month")
+                    .agg(count("*").alias("Total_Count"))  # Count occurrences
+                    .orderBy(col("Der_Financial_Year"), col("Der_Activity_Month"))  # Order by period
+)
+
+# Step 3: Show the result
+isp_spell_hrg_period_df.show(truncate=False)
+
+# Optional: Collect results to a Python list or export to file
+isp_spell_hrg_list = isp_spell_hrg_period_df.collect()
+
+print("List of Spell_Core_HRG_SUS with counts on a period basis:")
+for row in isp_spell_hrg_list:
+    print(f"{row['Der_Financial_Year']}-{row['Der_Activity_Month']} | {row['Spell_Core_HRG_SUS']}: {row['Total_Count']}")
 
