@@ -1,0 +1,12 @@
+from pyspark.sql.functions import col, when, length
+
+# Assuming 'apcs_core' is your Spark DataFrame
+apcs_core = apcs_core.withColumn(
+    "Provider_Flag", 
+    when(length(col("Provider_Code")) == 3, "NHS")  # If 3 characters, flag as NHS
+    .when(length(col("Provider_Code")) == 5, "ISP")  # If 5 characters, flag as ISP
+    .otherwise("Unknown")  # Optional: handle other cases
+)
+
+# Show the updated DataFrame
+apcs_core.show(truncate=False)
