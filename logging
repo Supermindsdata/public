@@ -1,0 +1,97 @@
+Feasibility for Implementation of Logging Functionality for OTIS
+
+1. Overview
+This document evaluates the feasibility of implementing a logging system for the LLaMA LLM hosted on an Azure Virtual Machine. The goal is to capture and store metadata related to inference requests, including user session tracking, processing time, and token usage, while selecting the most suitable Azure database for this use case.
+2. Objectives
+•	Capture and store basic logging information, including Username (Currently Not Available), Date Time, processing time, number of tokens in input data, total tokens including backend prompt, number of tokens in LLM response, and success status.
+•	Track inference statistics, such as processing time and token usage.
+•	Evaluate the implementation of session tracking options which are practical to implement without availability of UserName(ID)
+•	Compare different Azure database solutions and recommend the most suitable and cost-effective approach for logging.
+•	Evaluate the feasibility of capturing other data points e.g. naming backend prompts, adding a new drop-down menu for user and feedback loop
+3. Logging Implementation Strategy
+3.1. Data Fields to Capture
+Field Name	Description
+session_id	Unique identifier for tracking user interactions – UUID (Subject to implementation of defining logic to determine a session)
+username	Identifier for user (if available)
+timestamp	Date and time of inference request
+processing_time	Time taken from request submission to response display (in seconds)
+num_tokens_input	Number of tokens in the user’s input
+num_tokens_total	Total number of tokens, including backend prompt
+num_tokens_response	Number of tokens in the LLM response
+success_status	Boolean indicating whether the request was successful
+Following additional fields can also be added subject to discussion. 
+Field Name	Description
+model_version	Version of the LLM model used for inference
+request_size	Size of the input request in bytes
+response_size	Size of the output response in bytes
+server_latency	Time taken by the backend to process the request
+network_latency	Estimated time taken for request/response network transmission
+error_message	Error details if the request fails
+
+3.2. Session Tracking Strategy
+Since the current system does not track sessions, a time-based session grouping approach is recommended for the MVP. This method groups consecutive requests from the same VPN source within a specific time range as a session, making it practical to implement without additional infrastructure.
+For future implementation, session tracking could use session tokens, browser cookies/local storage, reverse proxy logging, or other types of strategies can be explored. 
+
+3.2. Potential Options for Implementing Session Tracking
+Since the current system does not track sessions, future implementation of session tracking could leverage the following options:
+•	Session Tokens: Assign unique session tokens for each user at the start of an interaction and store them in a temporary cache or database.
+•	Browser Cookies / Local Storage: If applicable for web-based interactions, store a session identifier in the client browser to maintain continuity across requests.
+•	JWT-based Authentication: Generate JWT tokens for authenticated users and pass session identifiers in the token payload.
+•	Reverse Proxy Logging: Use reverse proxy servers to assign session tracking based on request patterns and IP activity.
+•	Time-Based Session Grouping: Implement logic in the database to group consecutive requests from the same VPN source within a specific time range as a session.
+3.1. Evaluating Additional Data Points for Future Analytics
+Subject to integration with the front end and time constraints for the delivery of the first version of MVP, the following recommendations can be considered to enhance logging  analytics:
+•	Backend Prompt Identifier: Assigning names or categories to backend prompts can help track performance differences and log the number of times a particular prompt is used which will help improve and fine-tune responses.
+•	User Feedback on Responses: A simple rating or feedback mechanism (e.g., thumbs up/down, numeric ratings) can help refine LLM outputs in future versions and compare different LLMs.
+•	Drop-Down Menu Selections: If the front-end introduces predefined options for queries, logging these selections can provide insight into common user intents e.g. General, Audit Report, Feedback, or any other business-defined categories that capture the intent of input
+•	Error Type Categorization: If failures occur, categorizing error types (e.g., timeout, API failure, model overloading) can improve debugging and mitigation efforts.
+
+3.3. Comparison of Azure Database Options
+Storage Option	Best For	Pros	Cons
+Azure SQL Database	Structured SQL-based storage for logging	Easy to query, integrates with Power BI, cost-effective for logging	Limited scalability for real-time analytics
+Azure Synapse Analytics	Large-scale batch processing	Optimized for big data analytics, integrates with ML pipelines	Higher cost, not real-time
+Azure SQL Managed Instance	Full SQL Server compatibility	Supports complex SQL queries, cross-database joins	Expensive for logging-only workloads
+Azure Data Explorer (ADX)	Real-time logging & retrieval	High ingestion rate, optimized for fast queries	Uses KQL, not full SQL
+Azure Blob Storage (JSON/CSV)	Simple raw log storage	Cost-effective, integrates with other tools	Harder to query without ETL
+3.4. Recommended Approach
+•	Selected storage option: Azure SQL Database (for structured logging & easy retrieval)
+•	Justification: Suitable for structured logging, cost-effective, and integrates with Power BI for reporting.
+
+4. Future Scalability for Storing LLM Inputs and Outputs
+
+While the current implementation does not store input prompts and LLM responses, the chosen database should support future expansion for storing and retrieving user query history. Azure SQL Database can be extended with:
+
+Additional columns for prompt-response storage in the existing table schema.
+
+Indexing and partitioning strategies to efficiently manage large volumes of LLM input-output data.
+
+Integration with Azure Cognitive Search for embedding-based similarity searches and contextual retrieval.
+
+Potential transition to Azure Synapse or Data Explorer if large-scale retrieval and analytics become necessary.
+
+Batch processing with Azure Data Factory to periodically export stored prompts and responses for AI model fine-tuning.
+4. Implementation Plan
+Phase 1: Logging Setup (2 Weeks)
+•	Define database schema and create tables in Azure SQL Database
+•	Implement session tracking using UUIDs or hashed identifiers
+•	Develop API endpoints for logging inference data
+Phase 2: Querying & Analysis (3 Weeks)
+•	Implement SQL queries to fetch log details efficiently
+•	Set up dashboards in Power BI or Azure Monitor
+•	Optimize indexing for efficient log retrieval
+5. Risks & Mitigation Strategies
+Risk	Mitigation Strategy
+VPN IP changes frequently	Use session-based UUID tracking instead of IP-based tracking
+High query latency for large data	Implement indexing and partitioning in Azure SQL
+Need for real-time search in future	Consider future integration with Azure Data Explorer
+Compliance & security	Ensure encryption of stored logs, follow GDPR best practices
+6. Next Steps
+•	Confirm preferred session tracking approach (UUID, IP-based, hashed ID, JWT)
+•	Set up Azure SQL Database and define schema
+•	Develop API integration for logging inference requests
+•	Establish monitoring & reporting mechanisms
+________________________________________
+
+
+
+
