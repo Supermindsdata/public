@@ -1,1 +1,24 @@
+CREATE TABLE LLM_Logs (
+    log_id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    session_id NVARCHAR(100) NOT NULL,
+    username NVARCHAR(255) NULL,
+    timestamp DATETIME DEFAULT GETUTCDATE(),
+    request_text NVARCHAR(MAX) NOT NULL,
+    response_text NVARCHAR(MAX) NOT NULL,
+    processing_time FLOAT NOT NULL,
+    num_tokens_input INT NOT NULL,
+    num_tokens_total INT NOT NULL,
+    num_tokens_response INT NOT NULL,
+    success_status BIT NOT NULL,
+    model_version NVARCHAR(50) NULL,
+    request_size INT NULL,
+    response_size INT NULL,
+    server_latency FLOAT NULL,
+    network_latency FLOAT NULL,
+    error_message NVARCHAR(MAX) NULL
+);
 
+INSERT INTO LLM_Logs (session_id, username, request_text, response_text, processing_time, num_tokens_input, num_tokens_total, num_tokens_response, success_status, model_version, request_size, response_size, server_latency, network_latency, error_message)
+VALUES ('session_001', 'test_user', 'What is AI?', 'AI is artificial intelligence.', 2.5, 50, 100, 50, 1, 'v1.0', 1024, 2048, 1.2, 0.5, NULL);
+
+SELECT * FROM LLM_Logs ORDER BY timestamp DESC;
