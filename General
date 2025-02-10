@@ -1,1 +1,55 @@
+pip install django-mssql-backend pyodbc
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'mssql',
+        'NAME': 'LLM_Logging_DB',  # Your Azure SQL Database Name
+        'USER': 'adminuser',  # Azure SQL Username
+        'PASSWORD': 'your_password',  # Azure SQL Password
+        'HOST': 'llmlogs-server.database.windows.net',  # Azure SQL Server
+        'PORT': '',  # Leave empty for Azure SQL
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',
+            'encrypt': True,  # Enforce TLS encryption
+            'trust_server_certificate': False,
+        },
+    }
+}
+
+
+from django.db import models
+import uuid
+
+class LLMLogTest(models.Model):
+    log_id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
+    timestamp = models.DateTimeField(auto_now_add=True)  # Auto-populate timestamp
+
+    def __str__(self):
+        return f"Log {self.log_id} - {self.timestamp}"
+
+
+class Meta:
+    managed = False  # Django will not modify this table structure
+    db_table = 'LLM_Logs_test'  # Match the table name in Azure SQL
+
+
+from django.http import JsonResponse
+from .models import LLMLogTest
+
+def log_entry(request):
+    """Logs only `log_id` and `timestamp` into LLM_Logs_test"""
+    
+    # Create and save a new log entry
+    log_entry = LLMLogTest()
+    log_entry.save()
+
+    return JsonResponse({"message": "Log saved successfully", "log_id": log_entry.log_id, "timestamp": log_entry.timestamp})
+
+from django.urls import path
+from .views import log_entry
+
+urlpatterns = [
+    path('log/', log_entry, name='log_entry'),
+]
+
 
