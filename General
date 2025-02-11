@@ -2,16 +2,22 @@ import urllib.parse
 
 DATABASE_CONNECTION_STRING = "Driver={ODBC Driver 18 for SQL Server};Server=tcp:ofs-nonprod-sql-server-text-analysis.database.windows.net,1433;Database=ofs-nonprod-sql-db-text-analysis;Uid=your_username;Pwd=your_password;Encrypt=yes;TrustServerCertificate=no;"
 
-params = urllib.parse.urlparse(f"mssql://{DATABASE_CONNECTION_STRING.replace(';', '&')}")
+# Replace `;` with `&` so `urlparse` can parse it properly
+parsed_url = urllib.parse.urlparse(f"mssql://{DATABASE_CONNECTION_STRING.replace(';', '&')}")
+
+# Extract values safely
+def get_param_value(key, default=""):
+    query_params = urllib.parse.parse_qs(parsed_url.query)
+    return query_params[key][0] if key in query_params else default
 
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': params.path.lstrip('/').split('&')[0].split('=')[1],  # Extract Database Name
-        'USER': params.username if params.username else 'your_username',
-        'PASSWORD': params.password if params.password else 'your_password',
-        'HOST': params.hostname,
-        'PORT': params.port if params.port else '1433',
+        'NAME': get_param_value('Database', 'LLM_Logging_DB'),  # Extract Database Name
+        'USER': get_param_value('Uid', 'adminuser'),  # Extract Username
+        'PASSWORD': get_param_value('Pwd', 'your_password'),  # Extract Password
+        'HOST': parsed_url.hostname if parsed_url.hostname else 'ofs-nonprod-sql-server-text-analysis.database.windows.net',
+        'PORT': '1433',  # Azure SQL uses 1433
         'OPTIONS': {
             'driver': '{ODBC Driver 18 for SQL Server}',
             'encrypt': True,
@@ -19,90 +25,3 @@ DATABASES = {
         },
     }
 }
-
-
-
-
-import urllib.parse
-
-DATABASE_CONNECTION_STRING = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=tcp:your-sql-server.database.windows.net,1433;DATABASE=your_database;UID=your_username;PWD=your_password;Encrypt=yes;TrustServerCertificate=no;"
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'mssql',
-        'NAME': urllib.parse.parse_qs(DATABASE_CONNECTION_STRING)['DATABASE'][0],
-        'USER': urllib.parse.parse_qs(DATABASE_CONNECTION_STRING)['UID'][0],
-        'PASSWORD': urllib.parse.parse_qs(DATABASE_CONNECTION_STRING)['PWD'][0],
-        'HOST': urllib.parse.parse_qs(DATABASE_CONNECTION_STRING)['SERVER'][0].replace('tcp:', ''),
-        'PORT': '1433',
-        'OPTIONS': {
-            'driver': urllib.parse.parse_qs(DATABASE_CONNECTION_STRING)['DRIVER'][0],
-            'encrypt': True,
-            'trust_server_certificate': False,
-        },
-    }
-}
-
-
-
-
-
-
-
-
-
-pip install django-mssql-backend pyodbc
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'mssql',
-        'NAME': 'LLM_Logging_DB',  # Your Azure SQL Database Name
-        'USER': 'adminuser',  # Azure SQL Username
-        'PASSWORD': 'your_password',  # Azure SQL Password
-        'HOST': 'llmlogs-server.database.windows.net',  # Azure SQL Server
-        'PORT': '',  # Leave empty for Azure SQL
-        'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
-            'encrypt': True,  # Enforce TLS encryption
-            'trust_server_certificate': False,
-        },
-    }
-}
-
-
-from django.db import models
-import uuid
-
-class LLMLogTest(models.Model):
-    log_id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
-    timestamp = models.DateTimeField(auto_now_add=True)  # Auto-populate timestamp
-
-    def __str__(self):
-        return f"Log {self.log_id} - {self.timestamp}"
-
-
-class Meta:
-    managed = False  # Django will not modify this table structure
-    db_table = 'LLM_Logs_test'  # Match the table name in Azure SQL
-
-
-from django.http import JsonResponse
-from .models import LLMLogTest
-
-def log_entry(request):
-    """Logs only `log_id` and `timestamp` into LLM_Logs_test"""
-    
-    # Create and save a new log entry
-    log_entry = LLMLogTest()
-    log_entry.save()
-
-    return JsonResponse({"message": "Log saved successfully", "log_id": log_entry.log_id, "timestamp": log_entry.timestamp})
-
-from django.urls import path
-from .views import log_entry
-
-urlpatterns = [
-    path('log/', log_entry, name='log_entry'),
-]
-
-
