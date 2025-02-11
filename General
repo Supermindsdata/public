@@ -1,5 +1,30 @@
 import urllib.parse
 
+DATABASE_CONNECTION_STRING = "Driver={ODBC Driver 18 for SQL Server};Server=tcp:ofs-nonprod-sql-server-text-analysis.database.windows.net,1433;Database=ofs-nonprod-sql-db-text-analysis;Uid=your_username;Pwd=your_password;Encrypt=yes;TrustServerCertificate=no;"
+
+params = urllib.parse.urlparse(f"mssql://{DATABASE_CONNECTION_STRING.replace(';', '&')}")
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'mssql',
+        'NAME': params.path.lstrip('/').split('&')[0].split('=')[1],  # Extract Database Name
+        'USER': params.username if params.username else 'your_username',
+        'PASSWORD': params.password if params.password else 'your_password',
+        'HOST': params.hostname,
+        'PORT': params.port if params.port else '1433',
+        'OPTIONS': {
+            'driver': '{ODBC Driver 18 for SQL Server}',
+            'encrypt': True,
+            'trust_server_certificate': False,
+        },
+    }
+}
+
+
+
+
+import urllib.parse
+
 DATABASE_CONNECTION_STRING = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=tcp:your-sql-server.database.windows.net,1433;DATABASE=your_database;UID=your_username;PWD=your_password;Encrypt=yes;TrustServerCertificate=no;"
 
 DATABASES = {
