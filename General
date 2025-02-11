@@ -1,3 +1,31 @@
+import urllib.parse
+
+DATABASE_CONNECTION_STRING = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=tcp:your-sql-server.database.windows.net,1433;DATABASE=your_database;UID=your_username;PWD=your_password;Encrypt=yes;TrustServerCertificate=no;"
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'mssql',
+        'NAME': urllib.parse.parse_qs(DATABASE_CONNECTION_STRING)['DATABASE'][0],
+        'USER': urllib.parse.parse_qs(DATABASE_CONNECTION_STRING)['UID'][0],
+        'PASSWORD': urllib.parse.parse_qs(DATABASE_CONNECTION_STRING)['PWD'][0],
+        'HOST': urllib.parse.parse_qs(DATABASE_CONNECTION_STRING)['SERVER'][0].replace('tcp:', ''),
+        'PORT': '1433',
+        'OPTIONS': {
+            'driver': urllib.parse.parse_qs(DATABASE_CONNECTION_STRING)['DRIVER'][0],
+            'encrypt': True,
+            'trust_server_certificate': False,
+        },
+    }
+}
+
+
+
+
+
+
+
+
+
 pip install django-mssql-backend pyodbc
 
 DATABASES = {
