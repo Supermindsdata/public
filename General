@@ -1,15 +1,14 @@
-import socket
+import pyodbc
 
-server = "ofs-nonprod-sql-server-text-analysis.database.windows.net"
-port = 1433
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.settimeout(5)  # Timeout in 5 seconds
+server = 'ofs-nonprod-sql-server-text-analysis.database.windows.net'
+database = 'your_database_name'
+username = 'sqladmin'
+password = 'your_password'
+driver = '{ODBC Driver 18 for SQL Server}'
 
 try:
-    sock.connect((server, port))
-    print("✅ Port 1433 is OPEN. The issue is not a blocked port.")
+    conn = pyodbc.connect(
+        f'DRIVER={driver};SERVER=tcp:{server},1433;DATABASE={database};UID={username};PWD={password};Encrypt=yes;TrustServerCertificate=no;')
+    print("✅ Successfully connected to Azure SQL Database via Private Endpoint!")
 except Exception as e:
-    print(f"❌ Port 1433 is BLOCKED. Error: {e}")
-finally:
-    sock.close()
+    print(f"❌ Connection failed: {e}")
