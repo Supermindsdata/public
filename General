@@ -1,27 +1,15 @@
-import urllib.parse
+import socket
 
-DATABASE_CONNECTION_STRING = "Driver={ODBC Driver 18 for SQL Server};Server=tcp:ofs-nonprod-sql-server-text-analysis.database.windows.net,1433;Database=ofs-nonprod-sql-db-text-analysis;Uid=your_username;Pwd=your_password;Encrypt=yes;TrustServerCertificate=no;"
+server = "ofs-nonprod-sql-server-text-analysis.database.windows.net"
+port = 1433
 
-# Replace `;` with `&` so `urlparse` can parse it properly
-parsed_url = urllib.parse.urlparse(f"mssql://{DATABASE_CONNECTION_STRING.replace(';', '&')}")
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.settimeout(5)  # Timeout in 5 seconds
 
-# Extract values safely
-def get_param_value(key, default=""):
-    query_params = urllib.parse.parse_qs(parsed_url.query)
-    return query_params[key][0] if key in query_params else default
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'mssql',
-        'NAME': get_param_value('Database', 'LLM_Logging_DB'),  # Extract Database Name
-        'USER': get_param_value('Uid', 'adminuser'),  # Extract Username
-        'PASSWORD': get_param_value('Pwd', 'your_password'),  # Extract Password
-        'HOST': parsed_url.hostname if parsed_url.hostname else 'ofs-nonprod-sql-server-text-analysis.database.windows.net',
-        'PORT': '1433',  # Azure SQL uses 1433
-        'OPTIONS': {
-            'driver': '{ODBC Driver 18 for SQL Server}',
-            'encrypt': True,
-            'trust_server_certificate': False,
-        },
-    }
-}
+try:
+    sock.connect((server, port))
+    print("✅ Port 1433 is OPEN. The issue is not a blocked port.")
+except Exception as e:
+    print(f"❌ Port 1433 is BLOCKED. Error: {e}")
+finally:
+    sock.close()
