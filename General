@@ -1,26 +1,13 @@
-import pyodbc
+---------------------------------------------------------------------------
+OperationalError                          Traceback (most recent call last)
+Cell In[3], line 3
+      1 import pyodbc
+----> 3 conn = pyodbc.connect(
+      4     "DRIVER={ODBC Driver 18 for SQL Server};"
+      5     "SERVER=VM-DEVLPR14-UKS\\SQLEXPRESS;"
+      6     "DATABASE=django_logging_db;"
+      7     "Trusted_Connection=yes;"
+      8 )
+     10 print("✅ Connection successful!")
 
-server = 'ofs-nonprod-sql-server-text-analysis.database.windows.net'
-database = 'your_database_name'
-username = 'sqladmin'
-password = 'your_password'
-driver = '{ODBC Driver 18 for SQL Server}'
-
-try:
-    conn = pyodbc.connect(
-        f'DRIVER={driver};SERVER=tcp:{server},1433;DATABASE={database};UID={username};PWD={password};Encrypt=yes;TrustServerCertificate=no;')
-    print("✅ Successfully connected to Azure SQL Database via Private Endpoint!")
-except Exception as e:
-    print(f"❌ Connection
-
-
-import pyodbc
-
-conn = pyodbc.connect(
-    "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=VM-DEVLPR14-UKS\\SQLEXPRESS;"
-    "DATABASE=django_logging_db;"
-    "Trusted_Connection=yes;"
-)
-
-print("✅ Connection successful!")
+OperationalError: ('08001', '[08001] [Microsoft][ODBC Driver 18 for SQL Server]SSL Provider: The certificate chain was issued by an authority that is not trusted.\r\n (-2146893019) (SQLDriverConnect); [08001] [Microsoft][ODBC Driver 18 for SQL Server]Client unable to establish connection. For solutions related to encryption errors, see https://go.microsoft.com/fwlink/?linkid=2226722 (-2146893019)')
