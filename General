@@ -11,4 +11,16 @@ try:
         f'DRIVER={driver};SERVER=tcp:{server},1433;DATABASE={database};UID={username};PWD={password};Encrypt=yes;TrustServerCertificate=no;')
     print("✅ Successfully connected to Azure SQL Database via Private Endpoint!")
 except Exception as e:
-    print(f"❌ Connection failed: {e}")
+    print(f"❌ Connection
+
+
+import pyodbc
+
+conn = pyodbc.connect(
+    "DRIVER={ODBC Driver 18 for SQL Server};"
+    "SERVER=VM-DEVLPR14-UKS\\SQLEXPRESS;"
+    "DATABASE=django_logging_db;"
+    "Trusted_Connection=yes;"
+)
+
+print("✅ Connection successful!")
